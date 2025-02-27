@@ -51,6 +51,10 @@ const loginUser = async (req,res) => {
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
+
+    const verifyToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+    console.log(verifyToken);
+
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
     if(!loggedInUser){
@@ -67,65 +71,14 @@ const loginUser = async (req,res) => {
     return res
         .cookie('refreshToken', refreshToken, options)
         .cookie('accessToken', accessToken, options)
-        .json(new APIResponse(200, loggedInUser, "User logged in successfully"))
+        .json(new APIResponse(200, {
+            user: loggedInUser,
+            accessToken : accessToken,
+            refreshToken : refreshToken
+        }, "User logged in successfully"))
         .status(200);
 }
 
 
 
-const refreshAccessToken = async (req,res) => {
-    const refreshToken = req.body.refreshToken;
-
-    
-
-    if(!refreshToken){
-        return res.status(401).json(new APIError(401, null, "Refresh token is required"));
-    }
-
-    let decodedToken;
-    try {
-        decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    } catch (error) {
-        return res.status(401).json(new APIError(401, null, "Unable to decode refresh token"));
-    }
-
-    const user = await User.findOne({
-        _id: decodedToken._id
-    });
-
-    if(!user){
-        return res.status(404).json(new APIError(404, null, "User not found"));
-    }
-
-    if(user.refreshToken !== refreshToken){
-        console.error('Refresh token:', refreshToken);
-        console.error('User refresh token:', user.refreshToken);
-        return res.status(401).json(new APIError(401, null, "Refresh token is invalid"));
-    }
-
-    const {accessToken, refreshToken : newRefreshToken} = await generateAccessAndRefreshTokens(user._id);
-
-    if(!accessToken){
-        return res.status(500).json(new APIError(500, null, "Error generating access token"));
-    }
-
-    if(!newRefreshToken){
-        return res.status(500).json(new APIError(500, null, "Error generating refresh token"));
-    }
-    const options = {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none'
-    };
-
-    return res
-        .cookie('accessToken', accessToken, options)
-        .cookie('refreshToken', newRefreshToken, options)
-        .json(new APIResponse(200, {accessToken}, "Access token refreshed"))
-        .status(200);
-
-
-}
-
-
-module.exports = {loginUser, refreshAccessToken};
+module.exports = {loginUser , generateAccessAndRefreshTokens};

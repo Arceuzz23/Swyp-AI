@@ -10,6 +10,7 @@ class ApiResponse<T> with _$ApiResponse<T> {
     T? data,
     ErrorDetails? error,
     @Default({}) Map<String, dynamic> meta,
+    dynamic errors,
   }) = _ApiResponse;
 
   factory ApiResponse.fromJson(

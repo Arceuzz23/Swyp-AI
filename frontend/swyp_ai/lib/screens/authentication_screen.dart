@@ -1,6 +1,8 @@
 // lib/screens/auth_screen.dart
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:swyp_ai/screens/register_screen.dart';
+import 'package:swyp_ai/services/googleSignIn.dart';
 import 'package:swyp_ai/widgets/gradient_text.dart';
 import '../constants/constants.dart'; // Import CustomTheme
 import '../utils/logger.dart';
@@ -50,19 +52,71 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     try {
       AppLogger.debug('Processing login for $email');
-      await ref.read(authProvider.notifier).login(email, password);
+      final response = await ref
+          .read(authProvider.notifier)
+          .login(email, password);
+
+      // Update the auth state after successful login
+      if (response != null) {
+        await ref
+            .read(authStateProvider.notifier)
+            .setAuthState(
+              user: response.user,
+              accessToken: response.accessToken,
+              refreshToken: response.refreshToken,
+            );
+      }
 
       if (!mounted) return;
-
       AppLogger.logNavigation('AuthScreen', 'HomePage');
       context.go(AppRoutes.home.path);
     } catch (e) {
       AppLogger.error('Login process failed', e);
+      AppLogger.debug('Error type: ${e.runtimeType}');
+
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: ${e.toString()}')));
+      if (e is DioException) {
+        AppLogger.debug('Response data: ${e.response?.data}');
+        AppLogger.debug('Response status: ${e.response?.statusCode}');
+        AppLogger.debug('Error type: ${e.type}');
+        AppLogger.debug('Error message: ${e.message}');
+
+        final errorData = e.response?.data;
+        AppLogger.debug('Error data: $errorData');
+        final errorMessage =
+            errorData is Map
+                ? errorData['errors']?.toString()
+                : errorData?.toString() ?? 'Unknown error';
+
+        AppLogger.debug('Processed error message: $errorMessage');
+
+        if (errorMessage?.contains('Username not found') ?? false) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not found. Please register first.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          Future.delayed(const Duration(seconds: 1), () {
+            context.go(AppRoutes.register.path);
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage ?? 'Unknown error'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -193,8 +247,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           // Add Google sign in functionality
+                          await GoogleServices.loginWithGoogle();
                         },
                         icon: const Icon(
                           Icons.g_mobiledata_sharp,
@@ -260,14 +315,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RegisterScreen(),
-                            ),
-                          );
+                          context.go(AppRoutes.register.path);
                         },
-                        child: Text(
+                        child: const Text(
                           'Sign up',
                           style: TextStyle(
                             color: CustomTheme.accentColor,

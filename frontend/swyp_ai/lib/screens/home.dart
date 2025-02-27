@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:swyp_ai/features/router.dart';
 import 'package:swyp_ai/widgets/card.dart';
 import '../utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,8 +51,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     try {
       AppLogger.info('User logging out');
       await ref.read(authProvider.notifier).logout();
+      ref.read(authStateProvider.notifier).clearAuthState();
+
       if (mounted) {
-        context.go('/login');
+        context.go(AppRoutes.login.path);
       }
     } catch (e, stackTrace) {
       AppLogger.error('Failed to logout', e, stackTrace);

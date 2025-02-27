@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
@@ -46,11 +47,11 @@ class AppLogger {
 
   // Helper method to log API calls
   static void logApi(
-    String endpoint, {
-    dynamic request,
-    dynamic response,
-    dynamic error,
-  }) {
+      String endpoint, {
+        dynamic request,
+        dynamic response,
+        dynamic error,
+      }) {
     if (error != null) {
       _logger.e(
         '🌐 API ERROR - $endpoint',
@@ -62,8 +63,8 @@ class AppLogger {
 
     _logger.i(
       '🌐 API Call - $endpoint\n'
-      'Request: $request\n'
-      'Response: $response',
+          'Request: $request\n'
+          'Response: $response',
     );
   }
 
@@ -72,3 +73,5 @@ class AppLogger {
     _logger.i('🔄 Navigation: $from → $to');
   }
 }
+
+

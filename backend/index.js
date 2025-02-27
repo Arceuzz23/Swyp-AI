@@ -8,9 +8,17 @@ require('dotenv').config();
 const registerUser = require('./src/auth/RegisterUser');
 const APIResponse = require('./src/apiResponse');
 const APIError = require('./src/apiError');
-const { loginUser, refreshAccessToken } = require('./src/auth/LoginUser');
+const { loginUser } = require('./src/auth/LoginUser');
 const addQuote = require('./src/manageQuotes/addQuote');
 const deleteQuotes = require('./src/manageQuotes/deleteQuotes');
+const User = require('./src/models/usermodel');
+const addGenere = require('./src/manageGenere');
+const logoutUser = require('./src/auth/logout');
+const googleLogin = require('./src/auth/googleLogin');
+const googleRegister = require('./src/auth/googleRegisterr');
+
+
+
 
 
 
@@ -33,9 +41,14 @@ app.get('/test', (req, res) => {
 });
 app.post('/register',registerUser);
 app.post('/login', loginUser);
-app.post('/refresh', refreshAccessToken);
 app.post('/addQuote', addQuote);
 app.post('/deleteQuote', deleteQuotes);
+app.post('/addGenre', addGenere);
+app.post('/logout', logoutUser);
+app.post('/googlelogin', googleLogin)
+app.post('/googleRegister', googleRegister);
+
+
 
 
 

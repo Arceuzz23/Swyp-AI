@@ -29,6 +29,7 @@ mixin _$ApiResponse<T> {
   T? get data => throw _privateConstructorUsedError;
   ErrorDetails? get error => throw _privateConstructorUsedError;
   Map<String, dynamic> get meta => throw _privateConstructorUsedError;
+  dynamic get errors => throw _privateConstructorUsedError;
 
   /// Serializes this ApiResponse to a JSON map.
   Map<String, dynamic> toJson(Object? Function(T) toJsonT) =>
@@ -54,6 +55,7 @@ abstract class $ApiResponseCopyWith<T, $Res> {
     T? data,
     ErrorDetails? error,
     Map<String, dynamic> meta,
+    dynamic errors,
   });
 
   $ErrorDetailsCopyWith<$Res>? get error;
@@ -79,6 +81,7 @@ class _$ApiResponseCopyWithImpl<T, $Res, $Val extends ApiResponse<T>>
     Object? data = freezed,
     Object? error = freezed,
     Object? meta = null,
+    Object? errors = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -107,6 +110,11 @@ class _$ApiResponseCopyWithImpl<T, $Res, $Val extends ApiResponse<T>>
                     ? _value.meta
                     : meta // ignore: cast_nullable_to_non_nullable
                         as Map<String, dynamic>,
+            errors:
+                freezed == errors
+                    ? _value.errors
+                    : errors // ignore: cast_nullable_to_non_nullable
+                        as dynamic,
           )
           as $Val,
     );
@@ -142,6 +150,7 @@ abstract class _$$ApiResponseImplCopyWith<T, $Res>
     T? data,
     ErrorDetails? error,
     Map<String, dynamic> meta,
+    dynamic errors,
   });
 
   @override
@@ -167,6 +176,7 @@ class __$$ApiResponseImplCopyWithImpl<T, $Res>
     Object? data = freezed,
     Object? error = freezed,
     Object? meta = null,
+    Object? errors = freezed,
   }) {
     return _then(
       _$ApiResponseImpl<T>(
@@ -195,6 +205,11 @@ class __$$ApiResponseImplCopyWithImpl<T, $Res>
                 ? _value._meta
                 : meta // ignore: cast_nullable_to_non_nullable
                     as Map<String, dynamic>,
+        errors:
+            freezed == errors
+                ? _value.errors
+                : errors // ignore: cast_nullable_to_non_nullable
+                    as dynamic,
       ),
     );
   }
@@ -209,6 +224,7 @@ class _$ApiResponseImpl<T> implements _ApiResponse<T> {
     this.data,
     this.error,
     final Map<String, dynamic> meta = const {},
+    this.errors,
   }) : _meta = meta;
 
   factory _$ApiResponseImpl.fromJson(
@@ -234,8 +250,11 @@ class _$ApiResponseImpl<T> implements _ApiResponse<T> {
   }
 
   @override
+  final dynamic errors;
+
+  @override
   String toString() {
-    return 'ApiResponse<$T>(success: $success, message: $message, data: $data, error: $error, meta: $meta)';
+    return 'ApiResponse<$T>(success: $success, message: $message, data: $data, error: $error, meta: $meta, errors: $errors)';
   }
 
   @override
@@ -247,7 +266,8 @@ class _$ApiResponseImpl<T> implements _ApiResponse<T> {
             (identical(other.message, message) || other.message == message) &&
             const DeepCollectionEquality().equals(other.data, data) &&
             (identical(other.error, error) || other.error == error) &&
-            const DeepCollectionEquality().equals(other._meta, _meta));
+            const DeepCollectionEquality().equals(other._meta, _meta) &&
+            const DeepCollectionEquality().equals(other.errors, errors));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -259,6 +279,7 @@ class _$ApiResponseImpl<T> implements _ApiResponse<T> {
     const DeepCollectionEquality().hash(data),
     error,
     const DeepCollectionEquality().hash(_meta),
+    const DeepCollectionEquality().hash(errors),
   );
 
   /// Create a copy of ApiResponse
@@ -285,6 +306,7 @@ abstract class _ApiResponse<T> implements ApiResponse<T> {
     final T? data,
     final ErrorDetails? error,
     final Map<String, dynamic> meta,
+    final dynamic errors,
   }) = _$ApiResponseImpl<T>;
 
   factory _ApiResponse.fromJson(
@@ -302,6 +324,8 @@ abstract class _ApiResponse<T> implements ApiResponse<T> {
   ErrorDetails? get error;
   @override
   Map<String, dynamic> get meta;
+  @override
+  dynamic get errors;
 
   /// Create a copy of ApiResponse
   /// with the given fields replaced by the non-null parameter values.

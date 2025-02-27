@@ -24,6 +24,10 @@ const userSchema = new Schema(
             minlength: 6,
             maxlength: 1024
         },
+        generes : {
+            type: Array,
+            default: [],
+        },
         savedQuotes : {
             type: Array,
             default: [],
@@ -32,10 +36,27 @@ const userSchema = new Schema(
             type: String,
             default: null
         },
+        gender : {
+            type: String,
+            default: null,
+            required: true
+        },
+        age : {
+            type: Number,
+            default: null,
+            required: true
+        },
+        googleId : {
+            type: String,
+            default: null,
+
+        },
+        
     },
     {
         timestamps: true
-    }
+    },
+    
 
 );
 

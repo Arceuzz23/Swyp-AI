@@ -18,6 +18,7 @@ _$ApiResponseImpl<T> _$$ApiResponseImplFromJson<T>(
           ? null
           : ErrorDetails.fromJson(json['error'] as Map<String, dynamic>),
   meta: json['meta'] as Map<String, dynamic>? ?? const {},
+  errors: json['errors'],
 );
 
 Map<String, dynamic> _$$ApiResponseImplToJson<T>(
@@ -29,6 +30,7 @@ Map<String, dynamic> _$$ApiResponseImplToJson<T>(
   'data': _$nullableGenericToJson(instance.data, toJsonT),
   'error': instance.error,
   'meta': instance.meta,
+  'errors': instance.errors,
 };
 
 T? _$nullableGenericFromJson<T>(

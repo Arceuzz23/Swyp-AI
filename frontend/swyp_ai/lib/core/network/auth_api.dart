@@ -11,42 +11,66 @@ class AuthApi {
 
   AuthApi(this._apiClient);
 
-  Future<ApiResponse<AuthResponse>> signIn({
-    required String email,
-    required String password,
-  }) async {
-    logger.d('🔐 Login attempt with username: $email');
+  Future<AuthResponse> login(String email, String password) async {
+    try {
+      final response = await _apiClient.post(
+        endpoint: '/login',
+        body: {'username': email, 'password': password},
+        fromJson: (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
+      );
 
-    final response = await _apiClient.post(
-      endpoint: '/login',
-      fromJson: (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
-      body: {"username": email, "password": password},
-    );
+      if (response.data == null) {
+        logger.d('Login response data is null'); // Debug log
+        throw DioException(
+          requestOptions: RequestOptions(path: '/login'),
+          error: 'Login failed: No data received',
+        );
+      }
+      return response.data!;
+    } on DioException catch (e) {
+      logger.d('DioException caught: ${e.response?.data}');
 
-    logger.d('''
-📡 API Response:
-  Success: ${response.success}
-  Message: ${response.message}
-  Data: ${response.data}
-  Error: ${response.error}
-''');
-
-    return response;
+      if (e.response?.data is Map) {
+        final errorData = e.response?.data;
+        final errorMessage =
+            errorData['errors'] ?? errorData['message'] ?? e.message;
+        throw DioException(
+          requestOptions: e.requestOptions,
+          response: e.response,
+          error: errorMessage,
+          type: e.type,
+        );
+      }
+      rethrow;
+    }
   }
 
-  Future<AuthResponse> login(String email, String password) async {
+  Future<ApiResponse<void>> logout() async {
+    return await _apiClient.post<void>(
+      endpoint: '/auth/logout',
+      fromJson: (_) => null,
+    );
+  }
+
+  Future<AuthResponse> register({
+    required String username,
+    required String password,
+    required String gender,
+    required int age,
+  }) async {
     final response = await _apiClient.post(
-      endpoint: '/login',
-      body: {'username': email, 'password': password},
+      endpoint: '/register',
+      body: {
+        'username': username,
+        'password': password,
+        'gender': gender,
+        'age': age,
+      },
       fromJson: (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
     );
     if (response.data == null) {
-      throw Exception('Login failed: No data received');
+      throw Exception('Registration failed: No data received');
     }
     return response.data!;
-  }
-
-  Future<void> logout() async {
-    await _apiClient.post(endpoint: '/logout', fromJson: (json) => null);
   }
 }

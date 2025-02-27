@@ -17,19 +17,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthAndNavigate();
+    _initializeApp();
   }
 
-  Future<void> _checkAuthAndNavigate() async {
-    final authState = ref.read(authProvider);
-    
-    // Add any initialization logic here
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      if (authState.value?.user != null) {
+  Future<void> _initializeApp() async {
+    try {
+      // Initialize auth state from stored credentials
+      await ref.read(authStateProvider.notifier).initializeAuthState();
+      
+      if (mounted) {
+        // The router will automatically handle the redirect based on auth state
         context.go(AppRoutes.home.path);
-      } else {
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to initialize app', e, stackTrace);
+      if (mounted) {
         context.go(AppRoutes.login.path);
       }
     }
