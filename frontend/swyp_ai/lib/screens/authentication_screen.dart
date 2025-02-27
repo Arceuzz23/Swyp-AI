@@ -1,19 +1,22 @@
 // lib/screens/auth_screen.dart
 import 'package:flutter/material.dart';
-import 'package:swyp_ai/screens/genre_selection.dart';
 import 'package:swyp_ai/screens/register_screen.dart';
 import 'package:swyp_ai/widgets/gradient_text.dart';
 import '../constants/constants.dart'; // Import CustomTheme
 import '../utils/logger.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+import '../features/router.dart';
 
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -31,38 +34,35 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    AppLogger.info('Login attempt started');
+  void _handleLogin() async {
+    AppLogger.info('Initiating login process');
+    final email = _emailController.text;
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      AppLogger.warning('Empty credentials attempted');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
     try {
-      final email = _emailController.text;
-      final password = _passwordController.text;
+      AppLogger.debug('Processing login for $email');
+      await ref.read(authProvider.notifier).login(email, password);
 
-      // Validate inputs
-      if (email.isEmpty || password.isEmpty) {
-        AppLogger.warning('Login attempted with empty credentials');
-        // Show error to user
-        return;
-      }
+      if (!mounted) return;
 
-      AppLogger.debug('Login credentials validated');
+      AppLogger.logNavigation('AuthScreen', 'HomePage');
+      context.go(AppRoutes.home.path);
+    } catch (e) {
+      AppLogger.error('Login process failed', e);
+      if (!mounted) return;
 
-      // Mock API call logging
-      AppLogger.logApi(
-        '/auth/login',
-        request: {'email': email, 'password': '***'},
-      );
-
-      // Navigate to next screen
-      AppLogger.logNavigation('AuthScreen', 'GenreSelectionScreen');
-      Navigator.push(
+      ScaffoldMessenger.of(
         context,
-        MaterialPageRoute(builder: (context) => GenreSelectionScreen()),
-      );
-
-      AppLogger.info('Login successful for user: $email');
-    } catch (e, stackTrace) {
-      AppLogger.error('Login failed', e, stackTrace);
-      // Show error to user
+      ).showSnackBar(SnackBar(content: Text('Login failed: ${e.toString()}')));
     }
   }
 

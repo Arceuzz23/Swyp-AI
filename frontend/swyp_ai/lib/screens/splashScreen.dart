@@ -1,36 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:swyp_ai/screens/authentication_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../features/router.dart';
+import '../core/providers/auth_provider.dart';
 import '../widgets/gradient_text.dart';
 import '../utils/logger.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.debug('SplashScreen initialized');
-    _initializeApp();
+    _checkAuthAndNavigate();
   }
 
-  Future<void> _initializeApp() async {
-    try {
-      AppLogger.info('Starting app initialization');
-      // Your initialization logic here
-      await Future.delayed(const Duration(seconds: 2));
+  Future<void> _checkAuthAndNavigate() async {
+    final authState = ref.read(authProvider);
+    
+    // Add any initialization logic here
+    await Future.delayed(const Duration(seconds: 2));
 
-      AppLogger.logNavigation('SplashScreen', 'AuthScreen');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
-      );
-    } catch (e, stackTrace) {
-      AppLogger.error('Failed to initialize app', e, stackTrace);
+    if (mounted) {
+      if (authState.value?.user != null) {
+        context.go(AppRoutes.home.path);
+      } else {
+        context.go(AppRoutes.login.path);
+      }
     }
   }
 
@@ -72,9 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             SizedBox(height: 20),
-            // CircularProgressIndicator(
-            //   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4385f3)),
-            // ),
+            CircularProgressIndicator(),
           ],
         ),
       ),

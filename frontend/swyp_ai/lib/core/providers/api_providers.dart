@@ -1,21 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:swyp_ai/core/network/api_client.dart';
-import 'package:swyp_ai/core/network/registration_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../network/auth_api.dart';
 
 part 'api_providers.g.dart';
 
 @riverpod
-ApiClient apiClient(ApiClientRef ref) {
-  final client = ApiClient();
-  ref.onDispose(() {
-    client.dispose();
-  });
-  return client;
-}
+ApiClient apiClient(ApiClientRef ref) => ApiClient();
 
 @riverpod
-RegistrationApi registrationApi(RegistrationApiRef ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return RegistrationApi(apiClient);
-}
+AuthApi authApi(AuthApiRef ref) => AuthApi(ref.watch(apiClientProvider));

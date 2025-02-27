@@ -30,12 +30,8 @@ class AppLogger {
     _logger.w('⚠️ WARNING: $message');
   }
 
-  static void error(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.e(
-      '❌ ERROR: $message',
-      error: error,
-      stackTrace: stackTrace ?? StackTrace.current,
-    );
+  static void error(String message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.e('❌ ERROR: $message', error: error, stackTrace: stackTrace);
   }
 
   static void verbose(dynamic message) {

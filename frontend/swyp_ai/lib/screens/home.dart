@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:swyp_ai/widgets/card.dart';
 import '../utils/logger.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
@@ -43,6 +46,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _handleLogout() async {
+    try {
+      AppLogger.info('User logging out');
+      await ref.read(authProvider.notifier).logout();
+      if (mounted) {
+        context.go('/login');
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to logout', e, stackTrace);
+    }
+  }
+
   @override
   void dispose() {
     AppLogger.debug('HomeScreen disposed');
@@ -52,8 +67,19 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _handleLogout,
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
       body: Center(
-        child: CardWidget(quote: "When life gives you lemon, squeeze it on someone's facer",)
+        child: CardWidget(
+          quote: "When life gives you lemon, squeeze it on someone's facer",
+        ),
       ),
     );
   }

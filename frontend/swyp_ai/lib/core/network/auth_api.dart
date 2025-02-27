@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
 import '../models/auth_response.dart';
 import '../models/api_response.dart';
 import 'api_client.dart';
-import '../../utils/logger.dart';
+
+final logger = Logger();
 
 class AuthApi {
   final ApiClient _apiClient;
@@ -13,52 +15,38 @@ class AuthApi {
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await _apiClient.dio.post(
-        '/auth/login',  // Update endpoint to login
-        data: {
-          'email': email,
-          'password': password,
-        },
-      );
+    logger.d('🔐 Login attempt with username: $email');
 
-      logger.i('Sign in response: ${response.data}');
+    final response = await _apiClient.post(
+      endpoint: '/login',
+      fromJson: (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
+      body: {"username": email, "password": password},
+    );
 
-      return ApiResponse.fromJson(
-        response.data,
-        (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
-      );
-    } on DioException catch (e) {
-      logger.e('Sign in error: $e');
-      rethrow;
-    }
+    logger.d('''
+📡 API Response:
+  Success: ${response.success}
+  Message: ${response.message}
+  Data: ${response.data}
+  Error: ${response.error}
+''');
+
+    return response;
   }
 
-  // You can keep the register method if needed
-  Future<ApiResponse<AuthResponse>> register({
-    required String email,
-    required String password,
-    required String name,
-  }) async {
-    try {
-      final response = await _apiClient.dio.post(
-        '/auth/register',
-        data: {
-          'email': email,
-          'password': password,
-          'name': name,
-        },
-      );
-
-      logger.i('Registration response: ${response.data}');
-
-      return ApiResponse.fromJson(
-        response.data,
-        (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
-      );
-    } on DioException catch (e) {
-      logger.e('Registration error: $e');
-      rethrow;
+  Future<AuthResponse> login(String email, String password) async {
+    final response = await _apiClient.post(
+      endpoint: '/login',
+      body: {'username': email, 'password': password},
+      fromJson: (json) => AuthResponse.fromJson(json as Map<String, dynamic>),
+    );
+    if (response.data == null) {
+      throw Exception('Login failed: No data received');
     }
+    return response.data!;
   }
-} 
+
+  Future<void> logout() async {
+    await _apiClient.post(endpoint: '/logout', fromJson: (json) => null);
+  }
+}

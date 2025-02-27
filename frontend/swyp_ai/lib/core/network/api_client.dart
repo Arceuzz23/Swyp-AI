@@ -1,22 +1,26 @@
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:swyp_ai/core/models/api_response.dart';
 
 class ApiClient {
-  late final Dio _dio;
+  late final Dio dio;
 
   ApiClient() {
-    _dio = Dio(
+    dio = Dio(
       BaseOptions(
-        baseUrl: const String.fromEnvironment('API_BASE_URL'),
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {'Content-Type': 'application/json'},
+        baseUrl: dotenv.env['URI'] ?? '', // Get URL from .env
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 3),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       ),
     );
 
     // Add interceptors
-    _dio.interceptors.addAll([
+    dio.interceptors.addAll([
       PrettyDioLogger(
         requestHeader: true,
         requestBody: true,
@@ -30,14 +34,22 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          // Handle common errors here
-          return handler.next(e);
+          // Transform error response into ApiResponse format
+          final errorResponse = ApiResponse(
+            success: false,
+            error: ErrorDetails(
+              code: e.response?.statusCode?.toString() ?? 'unknown',
+              message: e.message ?? 'Unknown error occurred',
+            ),
+          );
+          // Return error response instead of propagating the exception
+          return handler.resolve(
+            Response(requestOptions: e.requestOptions, data: errorResponse),
+          );
         },
       ),
     ]);
   }
-
-  Dio get dio => _dio;
 
   Future<ApiResponse<T>> post<T>({
     required String endpoint,
@@ -45,36 +57,31 @@ class ApiClient {
     Object? body,
   }) async {
     try {
-      final response = await _dio.post(endpoint, data: body);
+      final response = await dio.post(endpoint, data: body);
 
-      if (response.statusCode == 200) {
-        return ApiResponse(
-          success: true,
-          data: fromJson(response.data['data']),
-          message: response.data['message'],
-          meta: response.data['meta'] as Map<String, dynamic>? ?? {},
-        );
-      } else {
-        return ApiResponse(
-          success: false,
-          error: ErrorDetails(
-            code: response.statusCode?.toString() ?? 'unknown_error',
-            message: 'Request failed',
-          ),
-        );
+      if (response.data is ApiResponse) {
+        return response.data as ApiResponse<T>;
       }
-    } on DioException catch (e) {
+
+      return ApiResponse(
+        success: response.data['success'] ?? false,
+        message: response.data['message'],
+        data:
+            response.data['data'] != null
+                ? fromJson(response.data['data'])
+                : null,
+        meta: response.data['meta'] as Map<String, dynamic>? ?? {},
+      );
+    } catch (e) {
+      // Handle any non-Dio exceptions
       return ApiResponse(
         success: false,
-        error: ErrorDetails(
-          code: e.response?.statusCode?.toString() ?? 'unknown',
-          message: e.message ?? 'Unknown error occurred',
-        ),
+        error: ErrorDetails(code: 'unknown', message: e.toString()),
       );
     }
   }
 
   void dispose() {
-    _dio.close();
+    dio.close();
   }
 }
